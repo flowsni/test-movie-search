@@ -1,0 +1,13 @@
+header {
+  display: flex;
+  height: 80px;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid #a9adac;
+}
+
+.navigation {
+  flex-basis: 20%;
+  min-width: 300px;
+  padding: 20px;
+}

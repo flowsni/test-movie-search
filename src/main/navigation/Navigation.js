@@ -1,11 +1,28 @@
 import React from 'react';
 import './Navigation.css';
-
+import Selection from './Selection'
+import Slider from './Slider'
 class Navigation extends React.Component {
+  componentDidMount() {
+    //const genresUrl = `https://api.themoviedb.org/3/genre/movie/list?api_key=${process.env.REACT_APP_TMDB_API_KEY}&language=en-US`
+    fetch(this.props.url)
+      .then(response => response.json())
+      .then(data => this.props.setGenres(data.genres))
+      .catch(error => console.log(error))
+  }
+
   render() {
+    const { genre, genres, onChange, onGenreChange, year, rating, runtime } = this.props
     return (
       <section className='navigation'>
-        Navigation
+        <Selection
+          genre={genre}
+          onGenreChange={onGenreChange}
+          genres={genres}
+        />
+        <Slider data={year} onChange={onChange}/>
+        <Slider data={rating} onChange={onChange}/>
+        <Slider data={runtime} onChange={onChange}/>
       </section>
     )
   }

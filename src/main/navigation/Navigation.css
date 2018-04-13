@@ -11,3 +11,8 @@ header {
   min-width: 300px;
   padding: 20px;
 }
+
+.left-nav {
+  position: sticky;
+  top: 0;
+}

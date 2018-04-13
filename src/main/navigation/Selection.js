@@ -1,15 +1,23 @@
 import React from 'react';
 import './Selection.css';
+import Select from 'react-select';
+import 'react-select/dist/react-select.css';
 
-const Selection = ({ genre, genres, onGenreChange }) => (
+const Selection = ({ genre, genres, onGenreChange, handleChange }) => (
   <div className='selection'>
-    {console.log('genres', genres)}
     <label>Genre</label>
-    <select value={genre} onChange={onGenreChange}>
-      {genres.map( genre => (
-        <option key={genre.id} value={genre.name}>{genre.name}</option>
-      ))}
-    </select>
+    <Select 
+      name='form-field-name'
+      value={genre}
+      onChange={handleChange}
+      options={
+        genres.map( genre => ({
+          value: genre.id,
+          label: genre.name
+        }))
+      }
+      multi={true}      
+    />
   </div>
 )
 

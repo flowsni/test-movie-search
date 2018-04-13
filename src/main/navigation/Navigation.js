@@ -2,9 +2,10 @@ import React from 'react';
 import './Navigation.css';
 import Selection from './Selection'
 import Slider from './Slider'
+import SearchButton from './SearchButton'
+
 class Navigation extends React.Component {
   componentDidMount() {
-    //const genresUrl = `https://api.themoviedb.org/3/genre/movie/list?api_key=${process.env.REACT_APP_TMDB_API_KEY}&language=en-US`
     fetch(this.props.url)
       .then(response => response.json())
       .then(data => this.props.setGenres(data.genres))
@@ -12,17 +13,21 @@ class Navigation extends React.Component {
   }
 
   render() {
-    const { genre, genres, onChange, onGenreChange, year, rating, runtime } = this.props
+    const { genre, genres, onChange, onGenreChange, onSearchButtonClick, year, rating, runtime, handleChange } = this.props
     return (
       <section className='navigation'>
-        <Selection
-          genre={genre}
-          onGenreChange={onGenreChange}
-          genres={genres}
-        />
-        <Slider data={year} onChange={onChange}/>
-        <Slider data={rating} onChange={onChange}/>
-        <Slider data={runtime} onChange={onChange}/>
+        <div className="left-nav">
+          <Selection
+            genre={genre}
+            onGenreChange={onGenreChange}
+            genres={genres}
+            handleChange={handleChange}
+            />
+          <Slider data={year} onChange={onChange}/>
+          <Slider data={rating} onChange={onChange}/>
+          <Slider data={runtime} onChange={onChange}/>
+          <SearchButton onClick={onSearchButtonClick}/>
+        </div>
       </section>
     )
   }

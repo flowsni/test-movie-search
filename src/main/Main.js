@@ -6,25 +6,26 @@ import Movies from './movies/Movies';
 class Main extends React.Component {
 
   state = {
-    genre: 'comedy',
     url: `https://api.themoviedb.org/3/genre/movie/list?api_key=${process.env.REACT_APP_TMDB_API_KEY}&language=en-US`,
+    moviesUrl: `https://api.themoviedb.org/3/discover/movie?api_key=${process.env.REACT_APP_TMDB_API_KEY}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=1`,
+    genre: ["Comedy"],
     genres: [],
     year: {
-      label: 'year',
+      label: "year",
       min: 1990,
-      max: 2018,
+      max: 2017,
       step: 1,
-      value: { min: 2000, max: 2018 }
+      value: { min: 2000, max: 2017 }
     },
     rating: {
-      label: 'rating',
+      label: "rating",
       min: 0,
       max: 10,
       step: 1,
       value: { min: 8, max: 10 }
     },
     runtime: {
-      label: 'runtime',
+      label: "runtime",
       min: 0,
       max: 300,
       step: 15,
@@ -32,8 +33,12 @@ class Main extends React.Component {
     }
   }
 
+  onGenreChange = event => {
+    this.setState({ genre: event.target.value });
+  }
+
   setGenres = genres => {
-    this.setState({genres})
+    this.setState({genres});
   }
 
   onChange = data => {
@@ -42,23 +47,49 @@ class Main extends React.Component {
         ...this.state[data.type],
         value: data.value
       }
-    })
+    });
+  };
+
+  generateUrl = () => {
+    const {genres, year, rating, runtime } = this.state;
+    const genreId = this.state.genre.map(a => a.value).join(',')
+
+    const moviesUrl = `https://api.themoviedb.org/3/discover/movie?` +
+      `api_key=${process.env.REACT_APP_TMDB_API_KEY}&` +
+      `language=en-US&sort_by=popularity.desc&` +
+      `with_genres=${genreId}&` +
+      `primary_release_date.gte=${year.value.min}-01-01&` +
+      `primary_release_date.lte=${year.value.max}-12-31&` +
+      `vote_average.gte=${rating.value.min}&` +
+      `vote_average.lte=${rating.value.max}&` +
+      `with_runtime.gte=${runtime.value.min}&` +
+      `with_runtime.lte=${runtime.value.max}&` +
+      `page=1&`;
+
+    this.setState({ moviesUrl });
   }
 
-  onGenreChange = event => {
-    this.setState({ genre: event.target.value })
+  onSearchButtonClick = () => {
+    this.generateUrl();
+  }
+
+
+  handleChange = (genre) => {
+    this.setState({ genre: genre });
+    console.log(`Selected: ${genre.value}`);
   }
 
   render() {
-    return(
-      <section className='main'>
-        <Navigation
-          onChange={this.onChange}
+    return (
+      <section className="main">
+        <Navigation 
+          onChange={this.onChange} 
           onGenreChange={this.onGenreChange}
-          setGenres={this.setGenres}
-          {...this.state}
-        />
-        <Movies/>
+          setGenres={this.setGenres} 
+          onSearchButtonClick={this.onSearchButtonClick}
+          handleChange={this.handleChange}
+          {...this.state} />
+        <Movies url={this.state.moviesUrl}/>
       </section>
     )
   }

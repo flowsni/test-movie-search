@@ -6,6 +6,8 @@ import Movies from './movies/Movies';
 class Main extends React.Component {
 
   state = {
+    page: 1,
+    total_pages: 1,
     url: `https://api.themoviedb.org/3/genre/movie/list?api_key=${process.env.REACT_APP_TMDB_API_KEY}&language=en-US`,
     moviesUrl: `https://api.themoviedb.org/3/discover/movie?api_key=${process.env.REACT_APP_TMDB_API_KEY}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=1`,
     genre: ["Comedy"],
@@ -13,9 +15,9 @@ class Main extends React.Component {
     year: {
       label: "year",
       min: 1990,
-      max: 2017,
+      max: 2018,
       step: 1,
-      value: { min: 2000, max: 2017 }
+      value: { min: 2000, max: 2018 }
     },
     rating: {
       label: "rating",
@@ -30,7 +32,8 @@ class Main extends React.Component {
       max: 300,
       step: 15,
       value: { min: 60, max: 120 }
-    }
+    },
+    movies: []
   }
 
   onGenreChange = event => {
@@ -50,9 +53,9 @@ class Main extends React.Component {
     });
   };
 
-  generateUrl = () => {
-    const {genres, year, rating, runtime } = this.state;
-    const genreId = this.state.genre.map(a => a.value).join(',')
+  generateUrl = (params) => {
+    const {genres, year, rating, runtime, page } = params;
+    const genreId = params.genre.map(a => a.value).join(',')
 
     const moviesUrl = `https://api.themoviedb.org/3/discover/movie?` +
       `api_key=${process.env.REACT_APP_TMDB_API_KEY}&` +
@@ -64,23 +67,82 @@ class Main extends React.Component {
       `vote_average.lte=${rating.value.max}&` +
       `with_runtime.gte=${runtime.value.min}&` +
       `with_runtime.lte=${runtime.value.max}&` +
-      `page=1&`;
+      `page=${page}&`;
 
     this.setState({ moviesUrl });
   }
 
   onSearchButtonClick = () => {
-    this.generateUrl();
+    this.setState({page: 1});
+    this.generateUrl(this.state);
   }
-
 
   handleChange = (genre) => {
     this.setState({ genre: genre });
-    console.log(`Selected: ${genre.value}`);
+  }
+
+  storeMovies = data => {
+    const movies = data.results.map( result => {
+      const { vote_count, id, genre_ids, poster_path, title, vote_average, release_date} = result
+      return { vote_count, id, genre_ids, poster_path, title, vote_average, release_date}
+    })
+
+    this.setState({ movies, total_pages: data.total_pages })
+  }
+
+  fetchMovies = (url) => {
+    fetch(url)
+      .then(response => response.json())
+      .then(data => this.storeMovies(data))
+      .catch(error => console.log(error));
+  }
+
+  componentDidMount(){
+    const savedState = this.getStateFromLocalStorage();
+    if ( !savedState || (savedState && !savedState.movies.length)) {
+      this.fetchMovies(this.state.moviesUrl);
+    } else {
+      this.setState({ ...savedState });
+      this.generateUrl(savedState);
+    }
+  }
+
+  componentWillUpdate(nextProps, nextState) {
+    this.saveStateToLocalStorage();
+    if (this.state.moviesUrl !== nextState.moviesUrl) {
+      this.fetchMovies(nextState.moviesUrl);
+    }
+    if (this.state.page !== nextState.page) {
+      this.generateUrl(nextState);
+    }
+  }
+
+  onPageIncrease = () => {
+    const { page, total_pages } = this.state
+    const nextPage = page + 1;
+    if (nextPage <= total_pages) {
+      this.setState({ page: nextPage })
+    }
+  }
+
+  onPageDecrease = () => {
+    const nextPage = this.state.page - 1;
+    if ( nextPage > 0 ) {
+      this.setState({ page: nextPage })
+    }
+  }
+
+  saveStateToLocalStorage = () => {
+    localStorage.setItem("sweetpumpkins.params", JSON.stringify(this.state));
+  }
+  
+  getStateFromLocalStorage = () => {
+    return JSON.parse(localStorage.getItem("sweetpumpkins.params"));
   }
 
   render() {
     return (
+      console.log(this.state),
       <section className="main">
         <Navigation 
           onChange={this.onChange} 
@@ -89,7 +151,10 @@ class Main extends React.Component {
           onSearchButtonClick={this.onSearchButtonClick}
           handleChange={this.handleChange}
           {...this.state} />
-        <Movies url={this.state.moviesUrl}/>
+        <Movies movies={this.state.movies}          
+          page={this.state.page}
+          onPageIncrease={this.onPageIncrease}
+          onPageDecrease={this.onPageDecrease}/>
       </section>
     )
   }
